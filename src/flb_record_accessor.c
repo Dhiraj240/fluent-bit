@@ -91,6 +91,7 @@ static int ra_parse_buffer(struct flb_record_accessor *ra, flb_sds_t buf)
     int len;
     int pre = 0;
     int end = 0;
+    int quote_cnt;
     struct flb_ra_parser *rp;
     struct flb_ra_parser *rp_str = NULL;
 
@@ -184,7 +185,17 @@ static int ra_parse_buffer(struct flb_record_accessor *ra, flb_sds_t buf)
             continue;
         }
 
+        quote_cnt = 0;
         for (end = i + 1; end < len; end++) {
+            if (buf[end] == '\'') {
+              ++quote_cnt;
+            }
+
+            // ignore '.' if it is inside a string/subkey
+            if (buf[end] == '.' && (quote_cnt & 0x01)) {
+              continue;
+            }
+
             if (buf[end] == '.' || buf[end] == ' ' || buf[end] == ',' || buf[end] == '"') {
                 break;
             }
